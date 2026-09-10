@@ -1,0 +1,85 @@
+const TURSO_URL = process.env.TURSO_URL;
+const TURSO_TOKEN = process.env.TURSO_TOKEN;
+
+exports.handler = async (event, context) => {
+    const method = event.httpMethod;
+
+    const tursoHeaders = {
+        'Authorization': `Bearer ${TURSO_TOKEN}`,
+        'Content-Type': 'application/json'
+    };
+
+    try {
+        let sql = '';
+        let args = [];
+
+        if (method === 'GET') {
+            sql = 'SELECT * FROM cadastros';
+        } else if (method === 'POST') {
+            const data = JSON.parse(event.body);
+            sql = 'INSERT INTO cadastros (cliente, responsavel, modelo, serie, contato, local, data_hora) VALUES (?, ?, ?, ?, ?, ?, ?)';
+            args = [
+                { type: "text", value: data.cliente || "" },
+                { type: "text", value: data.responsavel || "" },
+                { type: "text", value: data.modelo || "" },
+                { type: "text", value: data.serie || "" },
+                { type: "text", value: data.contato || "" },
+                { type: "text", value: data.local || "" },
+                { type: "text", value: data.dataHora || "" }
+            ];
+        } else if (method === 'PUT') {
+            const data = JSON.parse(event.body);
+            sql = 'UPDATE cadastros SET cliente=?, responsavel=?, modelo=?, serie=?, contato=?, local=?, data_hora=? WHERE id=?';
+            args = [
+                { type: "text", value: data.cliente || "" },
+                { type: "text", value: data.responsavel || "" },
+                { type: "text", value: data.modelo || "" },
+                { type: "text", value: data.serie || "" },
+                { type: "text", value: data.contato || "" },
+                { type: "text", value: data.local || "" },
+                { type: "text", value: data.dataHora || "" },
+                { type: "integer", value: String(data.id) }
+            ];
+        } else if (method === 'DELETE') {
+            const data = JSON.parse(event.body);
+            sql = 'DELETE FROM cadastros WHERE id=?';
+            args = [ { type: "integer", value: String(data.id) } ];
+        } else {
+            return { statusCode: 200, body: 'Metodo nao suportado' };
+        }
+
+        const response = await fetch(`${TURSO_URL}/v2/pipeline`, {
+            method: 'POST',
+            headers: tursoHeaders,
+            body: JSON.stringify({
+                requests: [
+                    { type: "execute", stmt: { sql: sql, args: args } },
+                    { type: "close" }
+                ]
+            })
+        });
+
+        if (!response.ok) return { statusCode: response.status, body: "Erro na comunicacao com o banco" };
+        const result = await response.json();
+        
+        // Retorna os dados formatados quando for GET (Leitura)
+        if (method === 'GET') {
+            const executeResult = result.batched_results[0].response.result;
+            if (!executeResult || !executeResult.cols) return { statusCode: 200, body: JSON.stringify([]) };
+            
+            const columns = executeResult.cols.map(c => c.name);
+            const rows = executeResult.rows.map(row => {
+                const obj = {};
+                row.forEach((col, index) => {
+                    obj[columns[index]] = col.value !== undefined ? col.value : null;
+                });
+                return obj;
+            });
+            return { statusCode: 200, body: JSON.stringify(rows) };
+        }
+
+        return { statusCode: 200, body: JSON.stringify({ success: true }) };
+    } catch (error) {
+        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+    }
+};

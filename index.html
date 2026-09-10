@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meyer Tecnologia - Sistema</title>
+    <!-- Fonte Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome (Ícones) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+
+        :root {
+            --primary: #0f172a; --primary-hover: #1e293b;
+            --accent: #2563eb; --accent-hover: #1d4ed8;
+            --success: #16a34a; --success-hover: #15803d;
+            --danger: #dc2626; --danger-hover: #b91c1c;
+            --warning: #f59e0b; --warning-hover: #d97706;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --form-bg: #f1f5f9; --text-main: #334155;
+            --text-muted: #64748b; --border: #e2e8f0;
+            --th-bg: #0f172a; --th-color: #ffffff;
+            --tr-hover: #f8fafc;
+        }
+
+        body.dark-mode {
+            --primary: #60a5fa; --bg: #0f172a;
+            --card-bg: #1e293b; --form-bg: #0f172a;
+            --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border: #334155; --th-bg: #334155;
+            --th-color: #f8fafc; --tr-hover: #334155;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif; background-color: var(--bg);
+            color: var(--text-main); margin: 0; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            transition: background-color 0.3s, color 0.3s; padding: 20px;
+        }
+
+        .theme-toggle {
+            position: absolute; top: 20px; right: 20px;
+            background: var(--bg); border: 1px solid var(--border); color: var(--text-main);
+            padding: 8px 16px; border-radius: 20px; cursor: pointer;
+            font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px;
+            transition: all 0.2s; z-index: 100;
+        }
+
+        .hidden { display: none !important; }
+        .logo-meyer { display: block; max-width: 200px; margin: 0 auto 20px auto; mix-blend-mode: multiply; transition: filter 0.3s ease; }
+        body.dark-mode .logo-meyer { filter: invert(1) brightness(1.2); mix-blend-mode: screen; }
+
+        /* Auth */
+        #telaAuth { width: 100%; max-width: 400px; background: var(--card-bg); padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); text-align: center; margin: auto; }
+        .form-group { display: flex; flex-direction: column; text-align: left; margin-bottom: 15px; }
+        label { margin-bottom: 8px; font-weight: 600; font-size: 14px; color: var(--primary); display: flex; justify-content: space-between; }
+        input, textarea, select { padding: 12px 14px; background-color: var(--card-bg); color: var(--text-main); border: 1px solid var(--border); border-radius: 6px; font-size: 14px; width: 100%; }
+        .btn-login { width: 100%; padding: 14px; background-color: var(--accent); color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; font-weight: 600; transition: background-color 0.2s; margin-top: 10px; }
+        
+        /* App */
+        #telaApp { width: 100%; max-width: 1200px; background: var(--card-bg); border-radius: 12px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); position: relative; margin-top: 40px; padding-top: 30px; }
+        .app-header { display: flex; justify-content: center; align-items: center; background: transparent; padding: 0 30px 15px 30px; }
+        .nav-menu { display: flex; gap: 15px; }
+        .nav-btn { background: transparent; border: none; color: var(--text-main); font-size: 15px; font-weight: 600; padding: 10px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .nav-btn.active { background: var(--accent); color: white; }
+        .nav-btn.btn-sair { color: var(--danger); }
+        .app-content { padding: 15px 40px 30px 40px; }
+        h2 { text-align: center; color: var(--primary); font-size: 24px; margin-bottom: 20px; font-weight: 700; margin-top: 0; }
+        
+        /* Form e Tabela */
+        #cadastroForm { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; background: var(--bg); padding: 24px; border-radius: 8px; border: 1px solid var(--border); }
+        .form-actions { grid-column: span 2; display: flex; gap: 15px; margin-top: 10px; }
+        .form-actions button { flex: 1; padding: 14px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: 600; color: white;}
+        #btnSalvar { background-color: var(--accent); }
+        #btnCancelar { background-color: #94a3b8; display: none; }
+        .table-container { width: 100%; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        th, td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        th { background-color: var(--th-bg); color: var(--th-color); font-weight: 600; text-transform: uppercase; font-size: 12px; }
+        .client-name { font-weight: 600; color: var(--primary); display: block; }
+        .client-date { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+        
+        /* Combos Especiais */
+        .combo-box { display: flex; align-items: stretch; margin-top: 4px; width: 100%; position: relative; }
+        .combo-input { flex: 1; padding: 6px 8px; border: 1px solid var(--border); border-right: none; border-radius: 6px 0 0 6px; background-color: var(--card-bg); font-size: 13px; display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; white-space: nowrap; }
+        .combo-select-wrapper { position: relative; width: 32px; border: 1px solid var(--border); border-radius: 0 6px 6px 0; background-color: var(--form-bg); flex-shrink: 0; }
+        .combo-arrow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; color: var(--text-muted); }
+        .combo-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
+        
+        /* Botoes */
+        .action-buttons { display: flex; gap: 8px; align-items: center; }
+        .btn-whatsapp, .btn-excluir, .btn-editar { width: 34px; height: 34px; text-decoration: none; border-radius: 6px; font-size: 15px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; border: none; color: white;}
+        .btn-whatsapp { background-color: var(--success); }
+        .btn-editar { background-color: var(--warning); }
+        .btn-excluir { background-color: var(--danger); }
+        
+        #toast { visibility: hidden; min-width: 250px; background-color: var(--success); color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; top: 30px; transform: translateX(-50%); font-size: 15px; font-weight: 600; opacity: 0; transition: opacity 0.3s, top 0.3s; }
+        #toast.show { visibility: visible; opacity: 1; top: 50px; }
+
+        @media (max-width: 768px) { #cadastroForm { grid-template-columns: 1fr; } .form-actions { grid-column: span 1; flex-direction: column; } }
+    </style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙 Modo Escuro</button>
+<div id="toast">Operação realizada com sucesso!</div>
+
+<!-- TELA 1: LOGIN SIMULADO -->
+<div id="telaAuth">
+    <img src="meyer.jpeg" alt="Meyer Tecnologia" class="logo-meyer" onerror="this.style.display='none'">
+    <div id="sectionLogin">
+        <h2>Entrar no Sistema</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="emailLogin">E-mail</label>
+                <input type="email" id="emailLogin" required placeholder="Digite seu e-mail">
+            </div>
+            <button type="submit" class="btn-login" id="btnLogin">Acessar Painel</button>
+        </form>
+    </div>
+</div>
+
+<!-- TELA 2: APLICATIVO PRINCIPAL -->
+<div id="telaApp" class="hidden">
+    <img src="meyer.jpeg" alt="Meyer Tecnologia" class="logo-meyer" onerror="this.style.display='none'">
+
+    <div class="app-header">
+        <div class="nav-menu">
+            <button class="nav-btn active" id="btnNavInicio" onclick="mudarAba('inicio')"><i class="fa-solid fa-house"></i> Início</button>
+            <button class="nav-btn" id="btnNavContatos" onclick="mudarAba('contatos')"><i class="fa-solid fa-address-book"></i> Contatos</button>
+            <button class="nav-btn btn-sair" onclick="fazerLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i> Sair</button>
+        </div>
+    </div>
+
+    <div class="app-content">
+        <div id="abaInicio">
+            <h2>Cadastro de Cliente</h2>
+            <form id="cadastroForm">
+                <div class="form-group">
+                    <label for="cliente">Cliente</label>
+                    <input type="text" id="cliente" required placeholder="Ex: 0001 Nome da empresa">
+                </div>
+                <div class="form-group">
+                    <label for="local"><span>Local</span><small>(Um por linha)</small></label>
+                    <textarea id="local" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="serie"><span>Nº de Série</span><small>(Uma por linha)</small></label>
+                    <textarea id="serie" required rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="modelo"><span>Máquina (Modelo)</span><small>(Uma por linha)</small></label>
+                    <textarea id="modelo" required rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="responsavel"><span>Responsável</span><small>(Um por linha)</small></label>
+                    <textarea id="responsavel" required rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="contato"><span>Contato (WhatsApp)</span><small>(Um por linha)</small></label>
+                    <textarea id="contato" required rows="2"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="btnSalvar">Salvar Cadastro</button>
+                    <button type="button" id="btnCancelar" onclick="cancelarEdicao()">Cancelar Edição</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="abaContatos" class="hidden">
+            <h2>Contatos Salvos (Nuvem)</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Cliente</th>
+                            <th>Série e Máquina</th>
+                            <th>Responsável e Contato</th>
+                            <th>Local</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaCorpo"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const themeToggleBtn = document.getElementById('themeToggle');
+    if (localStorage.getItem('theme') === 'dark') { document.body.classList.add('dark-mode'); themeToggleBtn.innerHTML = '☀️ Modo Claro'; }
+    window.toggleTheme = function() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        themeToggleBtn.innerHTML = isDark ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+    };
+
+    const telaAuth = document.getElementById('telaAuth');
+    const telaApp = document.getElementById('telaApp');
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault(); 
+        telaAuth.classList.add('hidden');
+        telaApp.classList.remove('hidden');
+        mudarAba('inicio'); 
+        carregarDadosDaNuvem();
+    });
+
+    function fazerLogout() {
+        telaApp.classList.add('hidden');
+        telaAuth.classList.remove('hidden');
+    }
+
+    window.mudarAba = function(aba) {
+        document.getElementById('abaInicio').classList.add('hidden');
+        document.getElementById('abaContatos').classList.add('hidden');
+        document.getElementById('btnNavInicio').classList.remove('active');
+        document.getElementById('btnNavContatos').classList.remove('active');
+
+        if (aba === 'inicio') {
+            document.getElementById('abaInicio').classList.remove('hidden');
+            document.getElementById('btnNavInicio').classList.add('active');
+        } else if (aba === 'contatos') {
+            document.getElementById('abaContatos').classList.remove('hidden');
+            document.getElementById('btnNavContatos').classList.add('active');
+            renderizarTabela();
+        }
+    };
+
+    function mostrarToast(mensagem, tipo="success") {
+        const toast = document.getElementById("toast");
+        toast.textContent = mensagem;
+        toast.style.backgroundColor = tipo === "error" ? "var(--danger)" : "var(--success)";
+        toast.className = "show";
+        setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+    }
+
+    // --- LOGICA DE COMUNICAÇÃO COM O BANCO DE DADOS (TURSO VIA NETLIFY) ---
+    
+    let cadastros = [];
+    let editandoId = null; 
+    const formCrud = document.getElementById('cadastroForm');
+    const btnSalvar = document.getElementById('btnSalvar');
+    const btnCancelar = document.getElementById('btnCancelar');
+
+    // Função que busca dados da nuvem
+    async function carregarDadosDaNuvem() {
+        try {
+            const res = await fetch('/.netlify/functions/api');
+            if (res.ok) {
+                cadastros = await res.json();
+                renderizarTabela();
+            } else {
+                mostrarToast("Erro ao conectar com o banco de dados.", "error");
+            }
+        } catch (e) {
+            console.error(e);
+            mostrarToast("Servidor offline.", "error");
+        }
+    }
+
+    // Mascara telefone
+    document.getElementById('contato').addEventListener('input', function(e) {
+        let lines = e.target.value.split('\n');
+        let maskedLines = lines.map(line => {
+            let x = line.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
+            if (!x) return ''; 
+            return !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
+        });
+        e.target.value = maskedLines.join('\n');
+    });
+
+    function gerarLinkWhatsapp(cadastro, selectedIndex = 0) {
+        const arrContatosOriginal = (cadastro.contato || '').split('\n').filter(c => c.trim() !== '');
+        const arrModelosOriginal = (cadastro.modelo || '').split('\n').filter(m => m.trim() !== '');
+        const arrSeriesOriginal = (cadastro.serie || '').split('\n').filter(s => s.trim() !== '');
+        
+        const num = arrContatosOriginal[selectedIndex] || arrContatosOriginal[arrContatosOriginal.length - 1] || "";
+        const numeroLimpo = num.replace(/\D/g, '');
+        let msgPadrao = "";
+
+        if (arrContatosOriginal.length <= 1 && arrModelosOriginal.length > 1) {
+            let listaMaquinas = "";
+            const maxMaquinas = Math.max(arrModelosOriginal.length, arrSeriesOriginal.length);
+            for (let i = 0; i < maxMaquinas; i++) {
+                let m = arrModelosOriginal[i] || arrModelosOriginal[arrModelosOriginal.length - 1] || "";
+                let s = arrSeriesOriginal[i] || arrSeriesOriginal[arrSeriesOriginal.length - 1] || "";
+                listaMaquinas += `\n- ${m} (Série: ${s})`;
+            }
+            msgPadrao = `Olá, Tudo bem? Bem vindo(a) ao Atendimento da Meyer Soluções. Poderia nos ajudar com as impressoras:${listaMaquinas}`;
+        } else {
+            const modeloSelecionado = arrModelosOriginal[selectedIndex] || arrModelosOriginal[arrModelosOriginal.length - 1] || "";
+            const serieSelecionada = arrSeriesOriginal[selectedIndex] || arrSeriesOriginal[arrSeriesOriginal.length - 1] || "";
+            msgPadrao = `Olá, Tudo bem? Bem vindo(a) ao Atendimento da Meyer Soluções. Poderia nos ajudar com a impressora ${modeloSelecionado} - Série: ${serieSelecionada} ?`;
+        }
+
+        return `https://wa.me/55${numeroLimpo}?text=${encodeURIComponent(msgPadrao)}`;
+    }
+
+    window.sincronizarTodos = function(rowIndex, selectedIndex) {
+        const prefixes = ['serie', 'modelo', 'responsavel', 'contato', 'local'];
+        prefixes.forEach(prefix => {
+            const sel = document.getElementById(`${prefix}Select-${rowIndex}`);
+            const div = document.getElementById(`${prefix}Input-${rowIndex}`);
+            if (sel && div) {
+                sel.value = selectedIndex; 
+                let text = sel.options[sel.selectedIndex]?.text || '';
+                let iconHtml = prefix === 'contato' ? '<i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 15px;"></i> ' : '';
+                let prefixHtml = prefix === 'serie' ? 'Série: ' : '';
+                div.innerHTML = `${iconHtml}${prefixHtml}${text}`;
+            }
+        });
+        const btnWpp = document.getElementById(`btnWpp-${rowIndex}`);
+        if (btnWpp) {
+            btnWpp.href = gerarLinkWhatsapp(cadastros[rowIndex], selectedIndex);
+        }
+    };
+
+    function createComboOrText(arr, idPrefix, index, isSerie = false, isContato = false) {
+        if (!arr || arr.length === 0 || (arr.length === 1 && arr[0] === '')) return '-'; 
+        let iconHtml = isContato ? '<i class="fa-brands fa-whatsapp" style="color: #25D366; font-size: 15px;"></i> ' : '';
+        let prefixHtml = isSerie ? 'Série: ' : '';
+
+        if (arr.length <= 1) {
+            let val = arr[0] || '';
+            if (isSerie) return `<div style="font-weight:400; color:var(--text-muted); margin-bottom:4px;">${prefixHtml}${val}</div>`;
+            if (isContato) return `<div style="font-weight:400; color:var(--text-muted); margin-top:4px; display:flex; align-items:center; gap:6px;">${iconHtml}${val}</div>`;
+            return `<div style="font-weight:600; color:var(--primary);">${val}</div>`;
+        }
+        
+        let options = arr.map((item, i) => `<option value="${i}">${item}</option>`).join('');
+        let displayVal = `${iconHtml}${prefixHtml}${arr[0]}`;
+        let extraStyle = (isSerie || isContato) ? 'font-weight:400; color:var(--text-muted);' : 'font-weight:600; color:var(--primary);';
+        
+        return `<div class="combo-box">
+            <div id="${idPrefix}Input-${index}" class="combo-input" style="${extraStyle}">${displayVal}</div>
+            <div class="combo-select-wrapper"><i class="fa-solid fa-chevron-down combo-arrow"></i></div>
+            <select id="${idPrefix}Select-${index}" class="combo-select" onchange="sincronizarTodos(${index}, this.value)">${options}</select>
+        </div>`;
+    }
+
+    function renderizarTabela() {
+        const tabelaCorpo = document.getElementById('tabelaCorpo');
+        tabelaCorpo.innerHTML = ''; 
+
+        if (!cadastros || cadastros.length === 0) {
+            tabelaCorpo.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">Nenhum registro encontrado no Banco de Dados.</td></tr>';
+            return;
+        }
+
+        cadastros.sort((a, b) => (parseInt((a.cliente.match(/^\d{1,4}/) || [])[0]) || 99999) - (parseInt((b.cliente.match(/^\d{1,4}/) || [])[0]) || 99999));
+
+        cadastros.forEach((item, index) => {
+            let arrSeries = (item.serie || '').split('\n').filter(s => s.trim() !== '');
+            let arrModelos = (item.modelo || '').split('\n').filter(m => m.trim() !== '');
+            let arrResponsaveis = (item.responsavel || '').split('\n').filter(r => r.trim() !== '');
+            let arrContatos = (item.contato || '').split('\n').filter(c => c.trim() !== '');
+            let arrLocais = item.local ? item.local.split('\n').filter(l => l.trim() !== '') : [];
+
+            let maxLines = Math.max(arrSeries.length, arrModelos.length, arrResponsaveis.length, arrContatos.length, arrLocais.length);
+            
+            const normalizeArr = (arr, max) => {
+                let res = [...arr];
+                while (res.length > 0 && res.length < max) { res.push(res[res.length - 1]); }
+                return res;
+            };
+
+            arrSeries = normalizeArr(arrSeries, maxLines);
+            arrModelos = normalizeArr(arrModelos, maxLines);
+            arrResponsaveis = normalizeArr(arrResponsaveis, maxLines);
+            arrContatos = normalizeArr(arrContatos, maxLines);
+            arrLocais = normalizeArr(arrLocais, maxLines);
+
+            const linkWhatsapp = gerarLinkWhatsapp(item, 0);
+
+            tabelaCorpo.innerHTML += `
+                <tr>
+                    <td><span class="client-name">${item.cliente}</span><div class="client-date">Atualizado: ${item.data_hora || '-'}</div></td>
+                    <td>${createComboOrText(arrSeries, 'serie', index, true, false)}${createComboOrText(arrModelos, 'modelo', index, false, false)}</td>
+                    <td>${createComboOrText(arrResponsaveis, 'responsavel', index, false, false)}${createComboOrText(arrContatos, 'contato', index, false, true)}</td>
+                    <td>${createComboOrText(arrLocais, 'local', index, false, false)}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <a href="${linkWhatsapp}" id="btnWpp-${index}" target="_blank" class="btn-whatsapp"><i class="fa-brands fa-whatsapp"></i></a>
+                            <button class="btn-editar" onclick="editarCadastro(${index})"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-excluir" onclick="excluirCadastro(${item.id})"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+        });
+    }
+
+    formCrud.addEventListener('submit', async function(e) {
+        e.preventDefault(); 
+        
+        btnSalvar.disabled = true;
+        btnSalvar.textContent = "Salvando na nuvem...";
+
+        const agora = new Date();
+        const dados = {
+            cliente: document.getElementById('cliente').value, responsavel: document.getElementById('responsavel').value,
+            modelo: document.getElementById('modelo').value, serie: document.getElementById('serie').value,
+            contato: document.getElementById('contato').value, local: document.getElementById('local').value,
+            dataHora: `${agora.toLocaleDateString('pt-BR')} ${agora.toLocaleTimeString('pt-BR')}`
+        };
+
+        try {
+            if (editandoId) { 
+                dados.id = editandoId;
+                await fetch('/.netlify/functions/api', { method: 'PUT', body: JSON.stringify(dados) });
+                mostrarToast("Atualizado na Nuvem!"); 
+            } else { 
+                await fetch('/.netlify/functions/api', { method: 'POST', body: JSON.stringify(dados) });
+                mostrarToast("Salvo na Nuvem!"); 
+            }
+            formCrud.reset();
+            cancelarEdicao();
+            await carregarDadosDaNuvem(); // Recarrega os dados do banco
+        } catch (erro) {
+            mostrarToast("Erro ao salvar no banco", "error");
+        } finally {
+            btnSalvar.disabled = false;
+            btnSalvar.innerHTML = editandoId ? '<i class="fa-solid fa-check"></i> Atualizar' : 'Salvar Cadastro';
+        }
+    });
+
+    window.editarCadastro = function(index) {
+        const item = cadastros[index];
+        ['cliente', 'responsavel', 'modelo', 'serie', 'contato', 'local'].forEach(id => document.getElementById(id).value = item[id] || '');
+        editandoId = item.id;
+        btnSalvar.innerHTML = '<i class="fa-solid fa-check"></i> Atualizar'; btnSalvar.style.backgroundColor = 'var(--warning)';
+        btnCancelar.style.display = 'block';
+        mudarAba('inicio'); 
+    }
+
+    window.cancelarEdicao = function() {
+        formCrud.reset(); editandoId = null;
+        btnSalvar.textContent = 'Salvar Cadastro'; btnSalvar.style.backgroundColor = 'var(--accent)';
+        btnCancelar.style.display = 'none';
+        mudarAba('contatos'); 
+    }
+
+    window.excluirCadastro = async function(idRegistro) {
+        if(confirm("Deseja EXCLUIR definitivamente este registro do banco de dados?")) {
+            try {
+                await fetch('/.netlify/functions/api', { method: 'DELETE', body: JSON.stringify({ id: idRegistro }) });
+                mostrarToast("Excluído da Nuvem!");
+                await carregarDadosDaNuvem();
+            } catch(e) {
+                mostrarToast("Erro ao excluir", "error");
+            }
+        }
+    }
+</script>
+</body>
+</html>
