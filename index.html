@@ -251,7 +251,7 @@
     // Função que busca dados da nuvem
     async function carregarDadosDaNuvem() {
         try {
-            const res = await fetch('/.netlify/functions/api');
+            const res = await fetch('/api');
             if (res.ok) {
                 cadastros = await res.json();
                 renderizarTabela();
